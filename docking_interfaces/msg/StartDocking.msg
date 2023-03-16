@@ -1,0 +1,2 @@
+bool start_docking_controller false
+bool start_apriltag_detection false

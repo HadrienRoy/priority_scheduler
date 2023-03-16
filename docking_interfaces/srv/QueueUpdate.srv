@@ -1,0 +1,8 @@
+string type
+string id
+float64 distance
+float64 battery
+---
+bool success
+string state
+int64 command
