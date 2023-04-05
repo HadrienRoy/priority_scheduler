@@ -29,7 +29,7 @@ set(DEPENDENCIES
   "docking_interfaces"
 )
 
-add_executable( scheduler src/scheduler.cpp src/queue_update_server.cpp)
+add_executable( scheduler src/scheduler.cpp src/queue_update_server.cpp src/state_update_client.cpp)
 ament_target_dependencies( scheduler ${DEPENDENCIES} )
 
 install(TARGETS

@@ -35,4 +35,6 @@ void SchedulerNode::queueUpdateServer(
     std::cout << "Charging Queue\n";
     print_queue(queue);
 
+    sendStates();
+
 }

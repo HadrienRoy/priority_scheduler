@@ -4,12 +4,12 @@
 #include <iostream>
 #include <string>
 
-#include "rclcpp_action/rclcpp_action.hpp"
-
-#include "docking_interfaces/srv/queue_update.hpp"
 #include "docking_interfaces/msg/charging_queue.hpp"
+#include "docking_interfaces/srv/queue_update.hpp"
+#include "docking_interfaces/srv/state_update.hpp"
 
-#include "nav2_msgs/action/navigate_to_pose.hpp"
+
+
 
 
 using namespace std::chrono_literals;
@@ -22,10 +22,6 @@ class SchedulerNode : public rclcpp::Node
         SchedulerNode() : Node("scheduler")
         {
             /*** SUBSCRIPTION DEFINITIONS***/
-            // my_subscriber = this->create_subscription<example_interfaces::msg::Int64>(
-            //     "topic_name", 10, std::bind(&SchedulerNode::callbackSub, this, std::placeholders::_1));
-
-            /** CLIENT DEFINITIONS **/
 
             /** PUBLISHER DEFINITIONS **/
             queue_pub = this->create_publisher<docking_interfaces::msg::ChargingQueue>("charging_queue", 10);
@@ -34,9 +30,6 @@ class SchedulerNode : public rclcpp::Node
             queue_update_service = this->create_service<docking_interfaces::srv::QueueUpdate>(
                 "scheduler/queue_update_service",
                 std::bind(&SchedulerNode::queueUpdateServer, this, _1, _2));
-
-            
-            // SERVICE to change CHARGING_COMPLETE -> robot will have client that calls when done
             
             RCLCPP_INFO(this->get_logger(), "Scheduler Node has been started.");
         }
@@ -56,15 +49,13 @@ class SchedulerNode : public rclcpp::Node
         /** VARIABLES **/
         std::list<Robot> queue;
 
+        std::vector<std::thread> threads;
+
         const float distance_const = 1;
         const float percent_const = 1;
 
         bool add_new_robot = false;
         bool state_change = false;
-
-        // bool docking_success = false;
-        // bool queuing_success = false;
-        // bool charging_success = false;
         
 
         /*** INTERFACES ***/
@@ -94,10 +85,13 @@ class SchedulerNode : public rclcpp::Node
         int fuzzify(float distance, float percent);
         int fuzzify_9(float distance, float percent);
         
-        // Queue Update Service
+        // Queue Update Service: handles queue updates requests from robots
         void queueUpdateServer(
             const std::shared_ptr<docking_interfaces::srv::QueueUpdate::Request> request,
             const std::shared_ptr<docking_interfaces::srv::QueueUpdate::Response> response);
+
+        // State Update Client: sends states to remote robots
+        void stateUpdateClient(std::string id, std::string state);
 
         // Print current charging queue to terminal
         void print_queue(std::list<Robot> const &queue)

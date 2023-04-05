@@ -179,13 +179,15 @@ bool SchedulerNode::stateChange(std::string id)
 
 // Send states to robots 
 void SchedulerNode::sendStates()
-{
+{    
     // Go through queue
-
-    // Send command to each robot via service
-
-
+    for (const Robot & robot : queue)
+    {
+        // Send command to each robot via service
+        threads.push_back(std::thread(std::bind(&SchedulerNode::stateUpdateClient, this, robot.id, robot.state)));   
+    }
 }
+
 
 int SchedulerNode::fuzzify(float distance, float percent)
 {
