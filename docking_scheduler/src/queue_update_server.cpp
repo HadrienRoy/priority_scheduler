@@ -11,8 +11,8 @@ void SchedulerNode::queueUpdateServer(
         if (addNewRobot(request->id, request->distance, request->battery))
         {
             response->success = true;
-            // response->state = "";
-            // response->command = 0;
+            response->state = "";
+            response->command = 0;
         }
     }
     else if(request->type == "state_change")
@@ -22,8 +22,8 @@ void SchedulerNode::queueUpdateServer(
         if (stateChange(request->id))
         {
             response->success = true;
-            // response->state = "";
-            // response->command = 0;
+            response->state = "";
+            response->command = 0;
         }
     }
     else
@@ -32,6 +32,7 @@ void SchedulerNode::queueUpdateServer(
         response->success = false;
     }
 
+    std::cout << "Charging Queue\n";
     print_queue(queue);
 
 }

@@ -40,45 +40,94 @@ bool SchedulerNode::addNewRobot(std::string id, float distance, float percent)
     Robot temp_robot;
     std::string state;
 
+    // The lower rank = higher priority
+    // int rank = floor((distance*distance_const) + (percent*percent_const));
+
+    int rank = fuzzify_9(distance, percent);
+
+    temp_robot.id = id;
+    temp_robot.rank = rank;
+    temp_robot.distance = (float)((int)(distance*100 + 0.5))/100;
+    temp_robot.percent = percent;
+
     // if no robot in queue -> robot can dock
     if (queue.empty())
     {
-        state = "Docking";
+        temp_robot.state = "Docking";
+        queue.push_back(temp_robot);    // Add robot to queue
     }
     else
     {
-        Robot last_robot = queue.back();
+        temp_robot.state = "Queuing";       // Add state to new robot
 
-        // if queueing -> priority check
+        Robot last_robot = queue.back();    // Get last robot
+
+        queue.push_back(temp_robot);        // Add robot to queue
+
+        // if docking/queueing -> priority check
         if (last_robot.state == "Queuing")
         {
             // if priority -> queue 1
-            priorityCheck(id, distance, percent);    // what is more than 1 robot queuing at this time?
+            priorityCheck(last_robot.state); 
         }
-    
-        state = "Queuing"; 
     }
-
-    // The lower rank = higher priority
-    int rank = floor((distance*distance_const) + (percent*percent_const));
-
-    temp_robot.state = state;
-    temp_robot.id = id;
-    temp_robot.rank = rank;
-    temp_robot.distance = distance;
-    temp_robot.percent = percent;
-
-    queue.push_back(temp_robot);
-
     return true;
 }
 
 // Check priority of queuing robots and adjust queue if needed
-void SchedulerNode::priorityCheck (std::string id, float distance, float percent)
+void SchedulerNode::priorityCheck(std::string state)
 {
-    // if already docking +  new robot
+    // std::list<Robot> temp_list;
+    Robot temp_queue[queue.size()];
 
-    // if already queuing +  new robo
+    // iter, go through queue and add robots to list
+    std::list<Robot>::iterator it;
+    std::list<Robot>::iterator it_start;
+    bool it_found = false;
+    int temp_size =0;
+    for (it = queue.begin(); it != queue.end(); it++)
+    {
+        // find all queuing or docking
+        if (it->state == state)
+        {
+            // temp_list.push_back(*it);
+            temp_queue[temp_size++] = *it;
+
+            if(!it_found)
+            {
+                it_found = true;
+                it_start = it;
+            }   
+        }
+    }
+
+    // Delete old queue part
+    std::list<Robot>::iterator it_end = queue.end();
+    queue.erase(it_start, it_end);
+
+    // Sort (array) array of robots by rank
+    for (int i = 0; i < temp_size - 1; i++)
+    {
+        for (int j = 0; j < temp_size-i-1; j++)
+        {
+            if (temp_queue[j].rank < temp_queue[j+1].rank)
+            {
+                std::swap(temp_queue[j], temp_queue[j+1]);
+            }
+        }
+    }
+    
+    // Add sorted list to queue
+    for (int i = 0; i < temp_size; i++)
+    {
+        queue.push_back(temp_queue[i]);
+    }
+
+    // Add temp queue section to main queue
+    // for (const Robot & robot : temp_list)
+    // {
+    //     queue.push_back(robot);
+    // }
 
 }
 
@@ -130,9 +179,91 @@ bool SchedulerNode::stateChange(std::string id)
 
 // Send states to robots 
 void SchedulerNode::sendStates()
-{}
+{
+    // Go through queue
+
+    // Send command to each robot via service
 
 
+}
+
+int SchedulerNode::fuzzify(float distance, float percent)
+{
+    std::string d_m; // distance_member
+    std::string p_m; // percent member
+
+    int output;
+
+    if (distance >= 50)
+        d_m = "FAR";
+    else    
+        d_m = "CLOSE";
+
+    if (percent >= 62.5)
+        p_m = "HIGH";
+    else    
+        p_m = "LOW";
+
+
+    if (d_m == "FAR" && p_m == "HIGH")
+        output = 1;
+    else if (d_m == "FAR" && p_m == "LOW")
+        output = 2;
+    else if (d_m == "CLOSE" && p_m == "HIGH")
+        output = 2;
+    else if (d_m == "CLOSE" && p_m == "LOW")
+        output = 3;
+
+    return output;   
+}
+
+int SchedulerNode::fuzzify_9(float distance, float percent)
+{
+    std::string d_m; // distance_member
+    std::string p_m; // percent member
+
+    int output;
+
+    // Distance member function
+    if (distance >= 62.5)
+        d_m = "FAR";
+    else if(distance < 62.5 && distance > 25)
+        d_m = "MID";
+    if (distance <= 25)
+        d_m = "CLOSE";
+    
+    // Percent member function
+    if (percent >= 75)
+        p_m = "HIGH";
+    else if(percent < 75 && percent > 50)
+        p_m = "MED";
+    if (percent <= 50)
+        p_m = "LOW";
+
+    // Distance = Far
+    if (d_m == "FAR" && p_m == "HIGH")
+        output = 1;
+    else if (d_m == "FAR" && p_m == "MED")
+        output = 2;
+    else if (d_m == "FAR" && p_m == "LOW")
+        output = 3;
+    // Distance = Mid
+    else if (d_m == "MID" && p_m == "HIGH")
+        output = 2;
+    else if (d_m == "MID" && p_m == "MED")
+        output = 3;
+    else if (d_m == "MID" && p_m == "LOW")
+        output = 4;
+    // Distance = Close
+    else if (d_m == "CLOSE" && p_m == "HIGH")
+        output = 3;
+    else if (d_m == "CLOSE" && p_m == "MED")
+        output = 4;
+    else if (d_m == "CLOSE" && p_m == "LOW")
+        output = 5;
+
+    return output;   
+}
 
 int main(int argc, char **argv)
 {
