@@ -47,7 +47,7 @@ bool SchedulerNode::addNewRobot(std::string id, float distance, float percent)
 
     temp_robot.id = id;
     temp_robot.rank = rank;
-    temp_robot.distance = (float)((int)(distance*100 + 0.5))/100;
+    temp_robot.distance = distance;
     temp_robot.percent = percent;
 
     // if no robot in queue -> robot can dock
@@ -179,12 +179,13 @@ bool SchedulerNode::stateChange(std::string id)
 
 // Send states to robots 
 void SchedulerNode::sendStates()
-{    
+{    int position = 0;
     // Go through queue
     for (const Robot & robot : queue)
     {
         // Send command to each robot via service
-        threads.push_back(std::thread(std::bind(&SchedulerNode::stateUpdateClient, this, robot.id, robot.state)));   
+        threads.push_back(std::thread(std::bind(&SchedulerNode::stateUpdateClient, this, robot.id, robot.state, position)));   
+        position++;
     }
 }
 

@@ -3,6 +3,7 @@
 #include <list>
 #include <iostream>
 #include <string>
+#include <iomanip>
 
 #include "docking_interfaces/msg/charging_queue.hpp"
 #include "docking_interfaces/srv/queue_update.hpp"
@@ -91,16 +92,19 @@ class SchedulerNode : public rclcpp::Node
             const std::shared_ptr<docking_interfaces::srv::QueueUpdate::Response> response);
 
         // State Update Client: sends states to remote robots
-        void stateUpdateClient(std::string id, std::string state);
+        void stateUpdateClient(std::string id, std::string state, int num);
 
         // Print current charging queue to terminal
         void print_queue(std::list<Robot> const &queue)
         {
+            std::cout << "-----------------------------------\n" << "Charging Queue" << std::endl;
+
             std::cout << "State\t  ID\t  Rank\t  D\t  %" << std::endl;
 
             for (auto const &robot: queue) {
                 std::cout << robot.state << "\t| " << robot.id << "\t| " << robot.rank << "\t| ";
-                std::cout << robot.distance << "\t| " << robot.percent << std::endl;
+                std::cout << std::fixed << std::setprecision(2) << robot.distance << "\t| "; 
+                std::cout << robot.percent << std::endl;
             }
 
             docking_interfaces::msg::ChargingQueue queue_msg;

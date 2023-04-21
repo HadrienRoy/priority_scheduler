@@ -1,3 +1,4 @@
-string state
+string queue_state
+int64 queue_num
 ---
 bool success
