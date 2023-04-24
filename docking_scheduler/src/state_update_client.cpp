@@ -20,7 +20,7 @@ void SchedulerNode::stateUpdateClient(std::string id, std::string state, int num
     try
     {
         auto response = future.get();
-        RCLCPP_INFO(this->get_logger(), "State Update service request (state:=%s) successful.", state.c_str());
+        // RCLCPP_INFO(this->get_logger(), "State Update service request (state:=%s) successful.", state.c_str());
     }
     catch (const std::exception &e)
     {

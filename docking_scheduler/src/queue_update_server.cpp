@@ -6,7 +6,7 @@ void SchedulerNode::queueUpdateServer(
 {
     if (request->type == "add_new_robot")
     {
-        RCLCPP_INFO(this->get_logger(), "Request: Add New Robot");
+        // RCLCPP_INFO(this->get_logger(), "Request: Add New Robot");
 
         if (addNewRobot(request->id, request->distance, request->battery))
         {
@@ -17,7 +17,7 @@ void SchedulerNode::queueUpdateServer(
     }
     else if(request->type == "state_change")
     {
-        RCLCPP_INFO(this->get_logger(), "Request: State Change");
+        // RCLCPP_INFO(this->get_logger(), "Request: State Change");
 
         if (stateChange(request->id))
         {
