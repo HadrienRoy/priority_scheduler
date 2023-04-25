@@ -26,6 +26,7 @@ set(srv_files
   "srv/GazeboChargeBattery.srv"
   "srv/QueueUpdate.srv"
   "srv/StateUpdate.srv"
+  "srv/RankUpdate.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}

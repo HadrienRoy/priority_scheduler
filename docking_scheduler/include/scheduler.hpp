@@ -8,6 +8,7 @@
 #include "docking_interfaces/msg/charging_queue.hpp"
 #include "docking_interfaces/srv/queue_update.hpp"
 #include "docking_interfaces/srv/state_update.hpp"
+#include "docking_interfaces/srv/rank_update.hpp"
 
 
 
@@ -57,6 +58,8 @@ class SchedulerNode : public rclcpp::Node
 
         bool add_new_robot = false;
         bool state_change = false;
+
+        int num_update = 0;
         
 
         /*** INTERFACES ***/
@@ -79,6 +82,8 @@ class SchedulerNode : public rclcpp::Node
 
         // When a state of a robot needs to be changes
         bool stateChange(std::string id);
+
+        
         
         // Send states to robots 
         void sendStates();
@@ -93,6 +98,12 @@ class SchedulerNode : public rclcpp::Node
 
         // State Update Client: sends states to remote robots
         void stateUpdateClient(std::string id, std::string state, int num);
+
+        // Rank Update 
+        bool addNewRobotV2(std::string id, float distance, float percent);
+        void rankUpdateClient(std::string id);
+        void updateRank(std::string id, float distance, float percent);
+        
 
         // Print current charging queue to terminal
         void print_queue(std::list<Robot> const &queue)
@@ -109,6 +120,7 @@ class SchedulerNode : public rclcpp::Node
 
             docking_interfaces::msg::ChargingQueue queue_msg;
             queue_msg.size = queue.size() - 1;
+            queue_msg.send_data = false;
 
             queue_pub->publish(queue_msg);
         }

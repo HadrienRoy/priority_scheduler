@@ -8,7 +8,7 @@ void SchedulerNode::queueUpdateServer(
     {
         // RCLCPP_INFO(this->get_logger(), "Request: Add New Robot");
 
-        if (addNewRobot(request->id, request->distance, request->battery))
+        if (addNewRobotV2(request->id, request->distance, request->battery))
         {
             response->success = true;
             response->state = "";
@@ -26,12 +26,14 @@ void SchedulerNode::queueUpdateServer(
             response->command = 0;
         }
     }
+    
     else
     {
         RCLCPP_INFO(this->get_logger(), "Request: Invalid");
         response->success = false;
     }
 
+    std::cout << request->type << std::endl;
     print_queue(queue);
 
     sendStates();

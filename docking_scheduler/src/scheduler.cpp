@@ -77,7 +77,6 @@ bool SchedulerNode::addNewRobot(std::string id, float distance, float percent)
 // Check priority of queuing robots and adjust queue if needed
 void SchedulerNode::priorityCheck(std::string state)
 {
-    // std::list<Robot> temp_list;
     Robot temp_queue[queue.size()];
 
     // iter, go through queue and add robots to list
@@ -90,7 +89,6 @@ void SchedulerNode::priorityCheck(std::string state)
         // find all queuing or docking
         if (it->state == state)
         {
-            // temp_list.push_back(*it);
             temp_queue[temp_size++] = *it;
 
             if(!it_found)
@@ -110,7 +108,8 @@ void SchedulerNode::priorityCheck(std::string state)
     {
         for (int j = 0; j < temp_size-i-1; j++)
         {
-            if (temp_queue[j].rank < temp_queue[j+1].rank)
+            // +1 so it doesnt rank if one rank above 
+            if (temp_queue[j].rank+1 < temp_queue[j+1].rank)
             {
                 std::swap(temp_queue[j], temp_queue[j+1]);
             }
@@ -121,14 +120,7 @@ void SchedulerNode::priorityCheck(std::string state)
     for (int i = 0; i < temp_size; i++)
     {
         queue.push_back(temp_queue[i]);
-    }
-
-    // Add temp queue section to main queue
-    // for (const Robot & robot : temp_list)
-    // {
-    //     queue.push_back(robot);
-    // }
-
+    } 
 }
 
 // When a state of a robot needs to be changes
@@ -175,6 +167,108 @@ bool SchedulerNode::stateChange(std::string id)
     }
 
     return true;
+}
+
+
+
+
+bool SchedulerNode::addNewRobotV2(std::string id, float distance, float percent)
+{
+    Robot temp_robot;
+    std::string state;
+
+    int rank = fuzzify_9(distance, percent);
+
+    temp_robot.id = id;
+    temp_robot.rank = rank;
+    temp_robot.distance = distance;
+    temp_robot.percent = percent;
+
+    // if no robot in queue -> robot can dock
+    if (queue.empty())
+    {
+        temp_robot.state = "Docking";
+        queue.push_back(temp_robot);    // Add robot to queue
+    }
+    else
+    {
+        // Add new robot
+        temp_robot.state = "Queuing";       // Add state to new robot
+        Robot last_robot = queue.back();    // Get last robot
+        queue.push_back(temp_robot);        // Add robot to queue
+
+        // priorityCheck("Queuing");
+
+        // Update ranks of all robots
+        std::list<Robot>::iterator it;
+        for (it = queue.begin(); it != queue.end(); it++)
+        {
+            if ((it->state == "Queuing") )
+            {
+                threads.push_back(std::thread(std::bind(&SchedulerNode::rankUpdateClient, this, it->id)));   
+            }
+        } 
+    }
+    
+    return true;
+}
+
+void SchedulerNode::rankUpdateClient(std::string id)
+{
+    // Create client
+    auto client = this->create_client<docking_interfaces::srv::RankUpdate>(id+"/docking_controller/rank_update_service"); 
+    while (!client->wait_for_service(std::chrono::seconds(1)))
+    {
+        RCLCPP_WARN(this->get_logger(), "Waiting for the State Update Server to be up...");
+    }
+
+    // Create request
+    auto request = std::make_shared<docking_interfaces::srv::RankUpdate::Request>();
+
+    auto future = client->async_send_request(request);
+
+    try
+    {
+        auto response = future.get();
+        RCLCPP_INFO(this->get_logger(), "Rank Update service request (id:=%s) successful.", id.c_str());
+        updateRank(response->id, response->distance, response->battery);
+    }
+    catch (const std::exception &e)
+    {
+        RCLCPP_INFO(this->get_logger(), "Rank Update service request failed.");
+    }
+}
+
+void SchedulerNode::updateRank(std::string id, float distance, float percent)
+{
+    // get data from robot
+    num_update += 1;
+
+    // std::cout << "Start updateRank"<<std::endl;
+    
+    // calculate new rank
+    int rank = fuzzify_9(distance, percent);
+
+    // update rank in queue
+    std::list<Robot>::iterator it;
+    for (it = queue.begin(); it != queue.end(); it++)
+    {
+        if (it->id == id)
+        {
+            it->rank = rank;
+            it->distance = distance;
+            it->percent = percent;
+        }
+    }  
+
+    if (num_update == queue.size())
+    {
+        priorityCheck("Queuing"); 
+        std::cout << "Priority Rank Update"<<std::endl;
+        print_queue(queue);
+        num_update = 0;
+    }
+
 }
 
 // Send states to robots 
