@@ -148,7 +148,18 @@ bool SchedulerNode::stateChange(std::string id)
         else if ((it->id == id) && (it->state == "Charging"))
         {
             // remove charged robot from queue
-            charging_complete = true;     
+            charging_complete = true;  
+
+            num_robots_done += 1;
+
+            if (use_timer && num_robots_done == total_robots)
+            {
+                steady_clock::time_point time_passed = steady_clock::now();
+                total_time_passed = duration_cast<duration<float>>(time_passed - timer_start).count();
+                // RCLCPP_INFO_ONCE(get_logger(), "Total Time Passed: %f", (total_time_passed));
+                std::cout << "Total Time Passed: " << total_time_passed << std::endl;
+            }
+            
         }
     }  
 
@@ -208,6 +219,13 @@ bool SchedulerNode::addNewRobotV2(std::string id, float distance, float percent)
                 threads.push_back(std::thread(std::bind(&SchedulerNode::rankUpdateClient, this, it->id)));   
             }
         } 
+    }
+
+    // For test
+    num_robots += 1;    // add robot to total number this test
+    if (use_timer && num_robots == 1)// if the first roboot, start timer to keep track of total time
+    {
+        timer_start = steady_clock::now();
     }
     
     return true;
@@ -322,17 +340,17 @@ int SchedulerNode::fuzzify_9(float distance, float percent)
     int output;
 
     // Distance member function
-    if (distance >= 62.5)
+    if (distance > mid_distance_threshold)
         d_m = "FAR";
-    else if(distance < 62.5 && distance > 25)
+    else if(distance <= mid_distance_threshold && distance > close_distance_threshold)
         d_m = "MID";
-    if (distance <= 25)
+    if (distance <= close_distance_threshold)
         d_m = "CLOSE";
     
     // Percent member function
-    if (percent >= 75)
+    if (percent > 75)
         p_m = "HIGH";
-    else if(percent < 75 && percent > 50)
+    else if(percent <= 75 && percent > 50)
         p_m = "MED";
     if (percent <= 50)
         p_m = "LOW";

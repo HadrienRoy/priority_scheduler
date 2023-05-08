@@ -33,8 +33,14 @@ void SchedulerNode::queueUpdateServer(
         response->success = false;
     }
 
+    std::cout << "-----------------------------------\n";
     std::cout << request->type << std::endl;
     print_queue(queue);
+
+    if (num_robots_done == total_robots)
+    {        
+        // std::cout << "Total Time Passed: " << total_time_passed << std::endl;
+    }
 
     sendStates();
 

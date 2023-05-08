@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include "chrono"
 
 #include "docking_interfaces/msg/charging_queue.hpp"
 #include "docking_interfaces/srv/queue_update.hpp"
@@ -15,6 +16,7 @@
 
 
 using namespace std::chrono_literals;
+using namespace std::chrono;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
@@ -60,6 +62,18 @@ class SchedulerNode : public rclcpp::Node
         bool state_change = false;
 
         int num_update = 0;
+
+        float close_distance_threshold = 25;
+        float mid_distance_threshold = 62.5;
+
+
+        // Testing variables
+        int num_robots = 0;
+        int num_robots_done = 0;
+        int total_robots = 4;
+        steady_clock::time_point timer_start;
+        float total_time_passed;
+        bool use_timer = true;
         
 
         /*** INTERFACES ***/
@@ -117,6 +131,7 @@ class SchedulerNode : public rclcpp::Node
                 std::cout << std::fixed << std::setprecision(2) << robot.distance << "\t| "; 
                 std::cout << robot.percent << std::endl;
             }
+            std::cout << "-----------------------------------\n";
 
             docking_interfaces::msg::ChargingQueue queue_msg;
             queue_msg.size = queue.size() - 1;
