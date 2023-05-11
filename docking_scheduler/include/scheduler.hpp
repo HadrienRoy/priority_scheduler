@@ -5,6 +5,7 @@
 #include <string>
 #include <iomanip>
 #include "chrono"
+#include <map>
 
 #include "docking_interfaces/msg/charging_queue.hpp"
 #include "docking_interfaces/srv/queue_update.hpp"
@@ -83,28 +84,35 @@ class SchedulerNode : public rclcpp::Node
         rclcpp::Service<docking_interfaces::srv::QueueUpdate>::SharedPtr queue_update_service;
 
 
-        /*** FUNCTION DECLARATIONS ***/
-
-        // Main Function to handle scheduling
-        void priorityScheduler(std::string id, float distance, float percent);
-       
-        // add new robot to queue
+        /*** QUEUE UPDATE FUNCTION DECLARATIONS ***/
+      
+         // add new robot to queue
         bool addNewRobot(std::string id, float distance, float percent);
-        
-        // Check priority of queuing robots and adjust queue if needed
-        void priorityCheck(std::string state);
+        bool addNewRobotV2(std::string id, float distance, float percent);
 
         // When a state of a robot needs to be changes
         bool stateChange(std::string id);
+        
 
-        
-        
+        /*** HELPER FUNCTION DECLARATIONS ***/
+
+        // Check priority of queuing robots and adjust queue if needed
+        void priorityCheck(std::string state);
+
         // Send states to robots 
         void sendStates();
 
-        int fuzzify(float distance, float percent);
+        // Rank Update 
+        void rankUpdateClient(std::string id);
+        void updateRank(std::string id, float distance, float percent);
+
+        /*** FUZZY LOGIC RANK FUNCTION DELCARATION ***/
         int fuzzify_9(float distance, float percent);
+        int fuzzy_rank(float distance, float percent);
         
+
+
+
         // Queue Update Service: handles queue updates requests from robots
         void queueUpdateServer(
             const std::shared_ptr<docking_interfaces::srv::QueueUpdate::Request> request,
@@ -112,12 +120,6 @@ class SchedulerNode : public rclcpp::Node
 
         // State Update Client: sends states to remote robots
         void stateUpdateClient(std::string id, std::string state, int num);
-
-        // Rank Update 
-        bool addNewRobotV2(std::string id, float distance, float percent);
-        void rankUpdateClient(std::string id);
-        void updateRank(std::string id, float distance, float percent);
-        
 
         // Print current charging queue to terminal
         void print_queue(std::list<Robot> const &queue)
