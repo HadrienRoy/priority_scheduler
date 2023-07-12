@@ -29,7 +29,7 @@ class SchedulerNode : public rclcpp::Node
             /*** SUBSCRIPTION DEFINITIONS***/
 
             /** PUBLISHER DEFINITIONS **/
-            queue_pub = this->create_publisher<docking_interfaces::msg::ChargingQueue>("charging_queue", 10);
+            queue_pub = this->create_publisher<docking_interfaces::msg::ChargingQueue>("charging_queue_size", 10);
             
             /** SERVICE DEFINITIONS **/
             queue_update_service = this->create_service<docking_interfaces::srv::QueueUpdate>(
@@ -49,7 +49,6 @@ class SchedulerNode : public rclcpp::Node
         };
 
     private:
-        
 
         /** VARIABLES **/
         std::list<Robot> queue;
@@ -63,9 +62,7 @@ class SchedulerNode : public rclcpp::Node
         bool state_change = false;
 
         int num_update = 0;
-
-        float close_distance_threshold = 25;
-        float mid_distance_threshold = 62.5;
+        float max_distance = 10;
 
 
         // Testing variables
@@ -88,7 +85,6 @@ class SchedulerNode : public rclcpp::Node
       
          // add new robot to queue
         bool addNewRobot(std::string id, float distance, float percent);
-        bool addNewRobotV2(std::string id, float distance, float percent);
 
         // When a state of a robot needs to be changes
         bool stateChange(std::string id);
@@ -97,7 +93,7 @@ class SchedulerNode : public rclcpp::Node
         /*** HELPER FUNCTION DECLARATIONS ***/
 
         // Check priority of queuing robots and adjust queue if needed
-        void priorityCheck(std::string state);
+        void priorityCheck();
 
         // Send states to robots 
         void sendStates();
@@ -107,11 +103,7 @@ class SchedulerNode : public rclcpp::Node
         void updateRank(std::string id, float distance, float percent);
 
         /*** FUZZY LOGIC RANK FUNCTION DELCARATION ***/
-        int fuzzify_9(float distance, float percent);
         int fuzzy_rank(float distance, float percent);
-        
-
-
 
         // Queue Update Service: handles queue updates requests from robots
         void queueUpdateServer(

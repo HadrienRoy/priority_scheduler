@@ -1,2 +1,2 @@
 string docking_state
-string action_state
+string queue_state

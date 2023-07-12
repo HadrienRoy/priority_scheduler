@@ -6,9 +6,7 @@ void SchedulerNode::queueUpdateServer(
 {
     if (request->type == "add_new_robot")
     {
-        // RCLCPP_INFO(this->get_logger(), "Request: Add New Robot");
-
-        if (addNewRobotV2(request->id, request->distance, request->battery))
+        if (addNewRobot(request->id, request->distance, request->battery))
         {
             response->success = true;
             response->state = "";
@@ -17,8 +15,6 @@ void SchedulerNode::queueUpdateServer(
     }
     else if(request->type == "state_change")
     {
-        // RCLCPP_INFO(this->get_logger(), "Request: State Change");
-
         if (stateChange(request->id))
         {
             response->success = true;
@@ -36,11 +32,6 @@ void SchedulerNode::queueUpdateServer(
     std::cout << "-----------------------------------\n";
     std::cout << request->type << std::endl;
     print_queue(queue);
-
-    if (num_robots_done == total_robots)
-    {        
-        // std::cout << "Total Time Passed: " << total_time_passed << std::endl;
-    }
 
     sendStates();
 
